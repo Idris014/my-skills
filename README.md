@@ -6,7 +6,7 @@ A public collection of reusable Codex skills.
 
 | Skill | Description |
 | --- | --- |
-| [`meshy2bambu`](skills/meshy2bambu/) | Converts images, descriptions, multiview references, or existing AI-generated models into repaired Blender assets and validated Bambu Studio deliveries. |
+| [`meshy2bambu`](skills/meshy2bambu/) | Converts images, descriptions, multiview references, or existing AI-generated models into repaired Blender assets, parameterized printable/magnetic bases, and validated Bambu Studio deliveries. |
 
 ## Repository layout
 
@@ -49,6 +49,10 @@ Restart or begin a new Codex task after installation so the skill catalog refres
 - image generation capability when the input is a text description;
 - Blender 4.x and Blender MCP, or Blender background Python;
 - Bambu Studio for final importer validation and printing handoff.
+
+The bundled base builder can auto-fit circular, elliptical, or rounded-rectangle plates, preserve
+the source mesh, add approved magnet pockets and locating holes, export a standalone STL, and emit
+machine-readable manifold/contact evidence.
 
 Never commit API keys or generated credential files. The skill reads the Meshy key only from the
 `MESHY_API_KEY` environment variable.

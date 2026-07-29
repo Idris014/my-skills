@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "protected_objects": [],
+  "support_objects": [],
+  "float_objects": [],
+  "base": {
+    "name": "Print_Base",
+    "shape": "circle",
+    "fit_mode": "auto",
+    "diameter_mm": null,
+    "width_mm": null,
+    "depth_mm": null,
+    "height_mm": 8.0,
+    "margin_x_mm": 4.0,
+    "margin_y_mm": 4.0,
+    "rearward_offset_mm": 0.0,
+    "top_z_mm": null,
+    "contact_overlap_mm": 0.3,
+    "bevel_mm": 0.6,
+    "color_hex": "#E8E2D9"
+  },
+  "magnet": {
+    "enabled": false,
+    "diameter_mm": 12.0,
+    "thickness_mm": 3.0,
+    "diameter_clearance_mm": 0.4,
+    "depth_clearance_mm": 0.3,
+    "minimum_roof_mm": 1.2,
+    "retention": "bottom_open_press_or_glue_fit",
+    "polarity_recorded": false
+  },
+  "locating_holes": {
+    "enabled": false,
+    "diameter_mm": 3.0,
+    "depth_mm": 3.5,
+    "spacing_mm": 18.0,
+    "axis": "X"
+  },
+  "outputs": {
+    "blend": "MASTER_WITH_BASE.blend",
+    "base_stl": "Print_Base.stl",
+    "assembly_glb": "ASSEMBLY_WITH_BASE.glb",
+    "report_json": "BASE-REPORT.json"
+  },
+  "notes": []
+}

@@ -2,24 +2,13 @@ VERSION/
 ├── MASTER.blend
 ├── README.md
 ├── VALIDATION.md
+├── BASE-SPEC.json             # only when a base or mounting interface exists
+├── BASE-REPORT.json           # only when a base or mounting interface exists
+├── JOB-RECORD.json            # long, paid, or multi-session jobs only
+├── SHA256SUMS
+├── inputs/
 ├── exports/
-│   ├── ASSEMBLY.glb
-│   ├── BASE.glb
-│   ├── BASE.stl
-│   ├── INSERT.glb
-│   └── INSERT.stl
 ├── renders/
-│   ├── 01_front_threequarter.png
-│   ├── 02_side_clearance.png
-│   └── 03_connection_or_plan.png
-├── reusable-base/
-└── bambu-studio-delivery/
-    ├── DELIVERY.3mf
-    ├── ASSEMBLY.glb
-    ├── BASE.glb
-    ├── BASE.stl
-    ├── INSERT.glb
-    ├── INSERT.stl
-    ├── README.md
-    ├── VALIDATION.md
-    └── renders/
+├── bambu-studio-delivery/     # candidate/final 3MF when Bambu delivery is requested
+├── audits/                    # color/geometry/import audits when generated
+└── reusable-parts/            # only when reusable independent parts exist

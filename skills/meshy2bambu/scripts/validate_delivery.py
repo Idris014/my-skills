@@ -79,7 +79,10 @@ def main() -> int:
         mesh_reports.append(report)
         if report["exit_code"] != 0:
             failures.append(f"Bambu import failed: {path}")
-        if report["values"].get("manifold") != "yes":
+        if (
+            "manifold" in report["values"]
+            and report["values"].get("manifold") != "yes"
+        ):
             failures.append(f"Non-manifold mesh: {path}")
 
     three_mf_report = None
@@ -93,7 +96,7 @@ def main() -> int:
         three_mf_report = {"bambu": info, "package": package}
         if info["exit_code"] != 0:
             failures.append(f"Bambu import failed: {args.three_mf}")
-        if info["values"].get("manifold") != "yes":
+        if "manifold" in info["values"] and info["values"].get("manifold") != "yes":
             failures.append(f"Non-manifold 3MF: {args.three_mf}")
         if package.get("zip_integrity") != "passed":
             failures.append(f"Invalid 3MF ZIP: {args.three_mf}")

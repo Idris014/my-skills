@@ -1,325 +1,298 @@
 ---
 name: meshy2bambu
-description: Use Meshy API as the upstream image-to-3D generator, then audit and repair the result with Blender MCP and deliver validated geometry or multicolor assets to Bambu Studio. Use this skill whenever a user wants to turn a render, concept description, reference image, or multiview set into a printable model; generate or repair GLB/OBJ/STL/3MF; preserve textures; add bases or connectors; or prepare an AI-generated asset for Bambu—even if Meshy is not named. Every invocation must begin with the material-intake questions and must stop for explicit user approval between every workflow stage.
-compatibility: Meshy API with MESHY_API_KEY, imagegen, Blender 4.x with Blender MCP or background Python, Python 3.10+, Bambu Studio CLI, zip/unzip, and standard filesystem tools.
+description: Convert reference images, text descriptions, multiview sets, or existing AI-generated GLB/OBJ/STL/3MF assets into repaired, printable Blender and Bambu Studio deliverables. Use this skill whenever the user wants image-to-3D, Meshy generation or Multi-Color Print, Blender mesh repair, texture preservation, texture-to-print-color conversion, multicolor face regions or 3MF preparation, or a printable base, plinth, stand, pedestal, magnetic base, support platform, connector, mounting feature, or Bambu delivery—even if Meshy is not named. Includes a non-destructive parameterized base builder with auto-fit round/elliptical/rounded-rectangle plates, magnet pockets, locating holes, contact checks, separate exports, and a machine-readable report. Default to a compact three-phase workflow and continue autonomously; pause only for unapproved paid generation, consequential geometry/design choices outside the request, or physical print actions.
+compatibility: Meshy API with MESHY_API_KEY when generation is needed, imagegen, Blender 4.x with Blender MCP or background Python, Python 3.10+ with NumPy for 3MF fallback audits, Bambu Studio CLI, zip/unzip, and standard filesystem tools.
 ---
 
 # Meshy2Bambu
 
-Turn a render or description into an immutable Meshy source asset, repair and engineer it in
-Blender, and deliver a validated Bambu Studio package.
+Turn a description, reference, multiview set, or existing mesh into a validated Blender/Bambu
+deliverable with as little ceremony as the risk allows.
 
-This is a user-steered pipeline. Accuracy improves when the user can inspect each irreversible,
-credit-consuming, or geometry-changing transition. Therefore, stage gates are part of the output,
-not optional project management.
+## Operating style
 
-## Non-negotiable interaction contract
+Use one continuous workflow when the request is sufficiently clear. Do not force the user through
+an intake questionnaire or stop after routine inspections.
 
-### Begin every new job with intake
+- Reuse information already present in the conversation or project.
+- If a missing choice materially changes the result, ask one short bundled question.
+- Treat an explicit request such as “用 Meshy 生成并交付给 Bambu” as authorization for the normal
+  generation, repair, validation, and packaging operations it names.
+- Group related findings and fixes. Avoid separate approval turns for reference intake, multiview
+  skip, source audit, Blender import, validation, and packaging.
+- Keep the user informed during long operations, but continue working unless a checkpoint below is
+  triggered.
 
-Before calling imagegen, Meshy, Blender MCP, Bambu Studio, or any project-changing tool, ask the
-user these two questions:
-
-1. **Source material:** “请提供渲染图/参考图，或给出完整文字描述。若提供描述，我将在下一阶段调用 imagegen 生成首张参考图。”
-2. **Multiview:** “是否需要多视图？请选择：已有 2–4 张视图 / 由 Meshy API 生成多视图 / 不需要。”
-
-Also explain in one sentence:
-
-> Meshy API can generate multiview references from a single approved image through its separate
-> image-to-image multiview stage; Multi-Image to 3D then consumes 1–4 approved images.
-
-If the user's opening message already includes images, a description, or a multiview preference,
-summarize what was received and ask them to confirm or correct it. **End the turn after intake.**
-Do not infer that supplied material waives this gate.
-
-When the user is resuming an active job by approving one next stage, do not restart intake. Read its
-`workflow-state.json`, verify that the named next gate is approved, and perform only that stage.
-
-### Stop between every stage
-
-After completing one stage:
-
-1. report only verified outputs and issues;
-2. provide clickable files or previews;
-3. state the proposed next stage and any credit, topology, color, or print consequence;
-4. ask for explicit instruction to continue;
-5. end the turn.
-
-Do not begin the next stage in the same turn. This remains true when the user says “全部执行”,
-“直接完成”, or “不要停”. Only a later explicit request to change this skill's gate policy can
-remove the pauses.
-
-Treat messages such as “继续”, “确认”, or “进入 Blender 修复” as approval for **one next stage
-only**, unless the user explicitly names a different single stage.
-
-## Stage map
+## Three-phase workflow
 
 ```text
-G0 Intake
- ↓ user approval
-G1 Master reference
- ↓ user approval
-G2 Multiview package or recorded skip
- ↓ user approval
-G3 Meshy 3D generation and source download
- ↓ user approval
-G4 Source GLB audit
- ↓ user approval
-G5 Blender import and repair diagnosis
- ↓ user approval
-G6 Blender geometry repair
- ↓ user approval
-G7 Bases, connectors, splits, and print engineering
- ↓ user approval
-G8 Bambu geometry/color preparation and importer validation
- ↓ user approval
-G9 Package and handoff
+Phase 1  Source and generation
+    ↓
+Phase 2  Blender repair and print engineering
+    ↓
+Phase 3  Bambu validation and handoff
 ```
 
-Maintain `workflow-state.json` in the job directory with:
+Complete all applicable phases in the same task unless the user asks for only one phase or a
+checkpoint requires a decision.
+
+### Phase 1 — Source and generation
 
-- current gate;
-- input paths and SHA-256;
-- Meshy task IDs and request settings;
-- user approval timestamp or conversation note for each completed gate;
-- accepted source and Blender master paths;
-- validation status.
+Choose the shortest valid route:
 
-Never mark a gate approved merely because its output succeeded.
+1. **Existing 3D asset:** archive an immutable copy and inspect it.
+2. **Approved image(s):** use Image to 3D for one image or Multi-Image to 3D for 2–4 consistent
+   images.
+3. **Description only:** generate one clean full-subject reference with imagegen, then continue to
+   Meshy when the user's request already authorizes 3D generation.
 
-Use `scripts/workflow_state.py` to initialize, approve, complete, and verify gates. Before any G1–G9
-tool action, run `assert-approved` for that gate.
+Ask about multiview only when it is genuinely undecidable and affects the requested fidelity.
+Otherwise:
 
-## G1 — Master reference
+- use supplied 2–4 views when consistent;
+- use Meshy-generated multiview when requested;
+- use the best single image when the user accepts inference or no multiview is available.
 
-If the user supplied a render:
+When calling Meshy, read [references/meshy-api.md](references/meshy-api.md). Prefer textured GLB,
+PBR enabled, 4K textures, no auto-size, and no remesh until thin parts and anatomy are accepted.
+Archive the request, task result, downloaded source, task ID, settings, credits, and SHA-256. Never
+persist `MESHY_API_KEY`.
 
-- inspect it;
-- copy it into the job's immutable `inputs/` directory;
-- record source path, dimensions, and SHA-256;
-- identify occluded parts, inconsistent anatomy, shadows, background clutter, and excluded objects.
+Run a compact source check before Blender:
+
+- file parses and is the expected format;
+- subject is present and not obviously truncated;
+- mesh/node counts and bounds are plausible;
+- materials, UVs, and embedded textures exist when color is expected.
+
+Use `scripts/inspect_glb.py` for GLB. If required color or geometry is missing, stop once with a
+clear blocker instead of continuing into repair.
+
+For a colored asset bound for Bambu, also run `scripts/inspect_color_partition.py`. Classify it as
+texture-only, multi-material, vertex-colored, face-painted 3MF, or unpainted. A GLB that looks
+colored but has one textured material and no `COLOR_0` is a texture source, not a pre-partitioned
+print file.
+
+### Phase 2 — Blender repair and print engineering
+
+Prefer Blender MCP when connected; otherwise use versioned Blender background Python. Never
+overwrite the immutable source.
+
+Import, diagnose, repair, and engineer in one phase when the changes are already within the user's
+request. Check only what affects the intended result:
 
-If the user supplied only a description:
+- readable geometry, normals, degenerates, gross holes, and obvious non-manifold defects;
+- requested anatomy or silhouette corrections;
+- material/UV links when textures must be preserved;
+- units, dimensions, applied transforms, centering, and print-bed contact;
+- contact and clearance for bases, magnets, pins, inserts, splits, or mating parts.
+
+Use `scripts/blender_mesh_audit.py` for a full audit only when the asset is damaged, generated,
+high-risk, or intended for final printing. A simple material edit or already-validated branch does
+not need the entire audit repeated.
+
+Repair principles:
 
-- use imagegen to produce one clean master reference;
-- use a plain or transparent background;
-- show the full subject without cropping;
-- state silhouette, materials, colors, pose, limb count, finger count, and excluded objects;
-- save the accepted candidate locally.
-
-Do not generate 3D in G1. Show the master image and stop for approval.
-
-## G2 — Multiview
-
-Read [references/meshy-api.md](references/meshy-api.md).
-
-### Existing views
-
-Accept 2–4 consistent views of the same object. Prefer front, back, left, and right. Normalize:
-
-- canvas size and subject scale;
-- neutral background;
-- camera height and projection;
-- pose, costume, proportions, accessories, and colors;
-- excluded objects.
-
-Keep top and bottom views as Blender diagnostic references when the four Meshy input slots are
-already occupied.
-
-### Meshy-generated views
-
-Use Meshy's Image to Image API with `generate_multi_view: true` on the approved master image.
-The API currently returns three angle images for a multiview task. Archive the request, task result,
-images, and credits consumed.
-
-Generated views are candidates, not facts. Check identity, limb count, fingers, accessories, and
-backside invention. Show all views and stop for user approval before 3D generation.
-
-### No multiview
-
-Record the user's choice and explain that unseen geometry will be inferred from one image. Stop and
-ask whether to proceed to Meshy 3D generation.
-
-## G3 — Meshy 3D generation
-
-Use:
-
-- Image to 3D for one approved image;
-- Multi-Image to 3D for 2–4 approved views.
-
-For fidelity-first printable candidates, start with:
-
-```json
-{
-  "ai_model": "latest",
-  "should_texture": true,
-  "enable_pbr": true,
-  "texture_resolution": "4k",
-  "image_enhancement": false,
-  "remove_lighting": true,
-  "should_remesh": false,
-  "pose_mode": "",
-  "auto_size": false,
-  "target_formats": ["glb"],
-  "moderation": true
-}
-```
-
-Change a parameter only when the user approves the tradeoff. In particular:
-
-- keep `should_remesh: false` until fingers, thin features, and silhouettes are accepted;
-- keep `auto_size: false`; establish physical millimetres in Blender;
-- do not request 8K textures unless the user accepts the additional credit cost;
-- do not request 3MF as the only source format.
-
-Use `scripts/meshy_api.py` for reproducible API requests. Never expose or persist
-`MESHY_API_KEY`.
-
-Download successful results immediately because returned URLs can expire. Preserve:
-
-```text
-JOB/meshy-source/
-├── request.json
-├── task-result.json
-├── source.glb
-├── previews/
-└── SHA256SUMS
-```
-
-Treat `source.glb` as immutable. Show Meshy previews, task ID, consumed credits, and local source
-path, then stop.
-
-## G4 — Source audit
-
-Run:
-
-```bash
-python scripts/inspect_glb.py SOURCE.glb --json-out source-glb-audit.json
-```
-
-Confirm:
-
-- glTF 2.0;
-- mesh/node/component counts;
-- materials and embedded images;
-- UVs, skins, and animations;
-- accessor bounds and probable units;
-- whether the source contains the expected complete subject.
-
-When color is expected but missing, stop here. Do not let a geometry repair conceal a missing
-texture pipeline.
-
-Report the audit and stop before opening or changing the asset in Blender.
-
-## G5 — Blender import and diagnosis
-
-Use Blender MCP when connected. Import the immutable source into a new versioned `.blend` without
-overwriting the GLB.
-
-Run `scripts/blender_mesh_audit.py` and record:
-
-- vertices, edges, faces, and connected components;
-- material slots and UV layers;
-- non-manifold edges, holes, degenerates, intersections, and normals;
-- bounds and scale;
-- anatomy or product-silhouette defects;
-- geometry and UV digests.
-
-Do not repair in this stage. Produce diagnosis renders and a proposed repair list, then stop.
-
-## G6 — Blender geometry repair
-
-Repair only the defects approved after G5:
-
-- holes, non-manifold regions, internal faces, degenerates, and normals;
-- jagged or unnatural transitions;
-- incomplete fingers, limbs, thin parts, and occluded backside geometry;
-- material and UV links when repair affects them.
-
-Preserve every accepted version. If topology changes, record that historical Bambu face paint can
-no longer be transferred by triangle order.
-
-Re-run the Blender audit, produce before/after evidence, save the repaired master, and stop.
-
-## G7 — Print engineering
-
-Read [references/base-design.md](references/base-design.md) when adding a base or connector.
-
-Keep the character/product separate from:
-
-- character-side base;
-- product-side mating insert;
-- pins, magnets, fasteners, cutters, and render helpers.
-
-Apply transforms, Boolean cleanup, triangulation, normal recalculation, BVH contact/clearance tests,
-and one-connected-manifold-component checks for each printable part.
-
-Do not let Meshy generate precision mating features. Build them parametrically in Blender.
-
-Save the engineered master, export review renders, and stop before Bambu preparation.
-
-## G8 — Bambu preparation and validation
-
-Read [references/bambu-delivery.md](references/bambu-delivery.md).
-
-Color rules:
-
-- GLB PBR textures are screen-rendering data;
-- Bambu multicolor printing requires face/region color data in 3MF;
-- Meshy's Multi-Color Print output is a candidate 3MF, not an automatic replacement for validated
-  Bambu painting;
-- transfer historical paint only when vertex and triangle order are unchanged.
-
-Export:
-
-- assembly GLB with materials and embedded textures;
-- one STL/GLB per printable base or insert;
-- Bambu 3MF when requested.
-
-Run `scripts/validate_delivery.py` and Bambu Studio's own importer. Confirm dimensions, facets,
-parts, volumes, manifold status, 3MF integrity, and paint counts where applicable.
-
-Never slice, map physical AMS slots, or send a print job unless the user explicitly authorizes that
-separate action. Report importer results and stop.
-
-## G9 — Package and handoff
-
-Use:
+- preserve accepted source versions and branch forward;
+- avoid global remesh or decimation when a local repair is sufficient;
+- keep characters/products separate from precision bases, inserts, pins, magnets, and cutters;
+- build precision mating features parametrically in Blender, not in Meshy;
+- record topology changes because historical Bambu face paint can transfer by triangle order only
+  when vertex and triangle order remain compatible.
+
+#### Base addition module
+
+When the request includes a base, plinth, stand, pedestal, support platform, magnet pocket, or
+mounting interface, read [references/base-design.md](references/base-design.md) and create a
+`BASE-SPEC.json` from [assets/BASE-SPEC.template.json](assets/BASE-SPEC.template.json).
+
+Use `scripts/blender_add_print_base.py` for a plate that can be expressed as a circle, ellipse, or
+rounded rectangle. It auto-fits the chosen support objects, keeps the character/product geometry
+untouched, can cut a bottom-opening magnet pocket and top locating holes, exports the base
+separately, saves a new Blender master, and writes a geometry/contact report. Use Blender MCP for
+a hidden saddle, sculpted support, asymmetric silhouette, hand/hair/skirt contact, or any design
+that needs semantic surface selection; still record the same base specification and validation
+fields.
+
+Apply these defaults only when they do not contradict the request:
+
+- round display base, `8 mm` high, `4 mm` XY margin, `0.6 mm` edge bevel, and `0.3 mm` intentional
+  support overlap;
+- separate `Print_Base` object with a neutral material; do not Boolean-union it into the character;
+- no magnet pocket or locating holes unless the user requests a detachable or magnetic interface;
+- for an explicitly magnetic small-character base with no dimensions supplied, propose the proven
+  `Ø12 × 3 mm` interface from the reference and pause before cutting it because magnet inventory
+  and mating-side constraints are physical design choices.
+
+Never auto-fit from the whole character when feet must float. Fit from named support objects or a
+reviewed low-contact footprint, shift the base as required, and list feet/shoes in
+`float_objects`. A successful base operation must prove:
+
+- the protected character/product mesh signatures are unchanged;
+- the base is a closed, single-component solid;
+- required support contacts intersect and expected-floating parts do not;
+- magnet and pin clearances match the recorded specification;
+- the standalone base export and the new Blender master reopen/import successfully.
+
+Run BVH/contact/clearance analysis only for interacting parts. Produce one orthographic side or
+three-quarter render that makes contact and foot clearance visible; a full turntable is optional.
+
+### Phase 3 — Bambu validation and handoff
+
+Read [references/bambu-delivery.md](references/bambu-delivery.md) when delivering 3MF, transferring
+paint, or preparing multicolor output.
+
+When the source is a colored GLB without Bambu face paint, read
+[references/texture-to-print-color.md](references/texture-to-print-color.md). Preserve two distinct
+outputs:
+
+1. a correctly scaled, embedded-texture `*_TEXTURE_SOURCE.glb` as the canonical editable and
+   appearance master;
+2. a face-colored 3MF candidate for Bambu Studio.
+
+Prefer Meshy's separate **Multi-Color Print API** when the user authorizes its 10-credit task:
+
+1. finish geometry repair and physical scale before color conversion;
+2. call `POST /openapi/v1/print/multi-color` with the successful upstream `input_task_id`, or the
+   final GLB as `model_url`;
+3. set an intentional `max_colors` from 1–16 and record it;
+4. preserve the returned 3MF as a raw Meshy candidate;
+5. audit face-color coverage and palette counts, import it in Bambu Studio, clean semantic errors
+   and small islands, then save a new final 3MF.
+
+The ordinary `target_formats: ["3mf"]` option on Meshy generation endpoints is not a substitute
+for `print-multi-color`; it may produce a geometry/container export without printable face-color
+regions. If paid Meshy conversion is not authorized or available, use Bambu Studio's native
+`Texture-to-Color Painting / 纹理转颜色` branch instead. Save its automatic output as a candidate
+before cleanup.
+
+Transfer character paint to a later base only when vertex and triangle order remain compatible.
+If geometry or topology changes after conversion, regenerate the candidate from the new final GLB
+instead of assuming old face indices still match.
+
+If a task succeeds but local download or archiving fails, resume the same task ID with
+`meshy_api.py multi-color-resume`; never submit a replacement paid task merely to recover an
+existing result.
+
+Automatic texture clustering is a starting point. It does not replace semantic review of eyes,
+hair/skin boundaries, fingers, clothing edges, shoe soles, and small accessories. If the user wants
+specific regions merged—such as eyes into skin—apply that rule before final validation.
+
+Export only the formats the user needs:
+
+- textured assembly GLB for appearance and archival;
+- flat-color GLB when useful for color review;
+- STL/GLB for genuinely separate printable parts;
+- Bambu 3MF when Bambu face/region color or project delivery is requested; keep raw automatic and
+  cleaned final versions separate.
+
+Remember that GLB PBR textures and Bambu face paint are different systems. Do not claim that a
+textured GLB is automatically multicolor-print ready.
+
+Run one final validation pass:
+
+- reopen the final Blender master;
+- confirm dimensions, object/part counts, triangles, and applied transforms;
+- run `scripts/inspect_color_partition.py` on the source and final 3MF when color is involved;
+- run `scripts/validate_delivery.py` and Bambu Studio's importer;
+- if Bambu's headless `--info` path crashes but the GUI loads the project, record the GUI evidence
+  and run `scripts/audit_3mf_mesh.py` for an independent edge-manifold audit instead of
+  misreporting the importer crash as non-manifold geometry;
+- test 3MF/ZIP integrity;
+- verify paint counts only for multicolor output;
+- verify per-part manifold/contact/clearance only where those properties matter.
+
+Package the result after validation. Start documentation from `assets/`, but include only relevant
+folders and files:
 
 ```text
 VERSION/
 ├── MASTER.blend
-├── workflow-state.json
 ├── README.md
-├── VALIDATION.md
+├── VALIDATION.md or VALIDATION.json
 ├── inputs/
-├── meshy-source/
 ├── exports/
 ├── renders/
-├── reusable-parts/
-└── bambu-studio-delivery/
+├── bambu-studio-delivery/   # when applicable
+└── SHA256SUMS
 ```
 
-Start documentation from `assets/`. Exclude secrets, scratch exports, temporary cutters, rejected
-iterations, `.blend1`, and expired remote URLs. Calculate SHA-256 and test every ZIP.
+Do not create empty `meshy-source`, `reusable-parts`, or connector folders when they do not apply.
+Exclude secrets, `.blend1`, scripts, scratch exports, temporary cutters, rejected iterations, and
+expired remote URLs. Test the final ZIP and report its SHA-256.
 
-Final handoff reports:
+## Checkpoints: pause only when needed
 
-- accepted source and version lineage;
-- Meshy task IDs, settings, and credits consumed;
-- Blender repair scope and topology change status;
-- dimensions, clearances, part/manifold counts, and color-preservation status;
-- Bambu importer result;
-- whether slicing, AMS mapping, and printer sending were performed;
-- clickable links to the package, master, validation report, Bambu files, reusable parts, and key
-  renders.
+Pause and request one explicit decision in these cases:
 
-## Preserve these invariants
+1. **Unapproved cost:** a Meshy/API call will consume credits and the user did not already ask to
+   run that generation.
+2. **Consequential choice outside scope:** the next action would delete accepted data, replace
+   textures, globally remesh/decimate, alter accepted anatomy, invalidate historical paint, or
+   commit an ambiguous base/magnet/connector design not specified by the user.
+3. **Physical print action:** slicing for a specific printer, mapping physical AMS slots, or sending
+   a print job always needs separate authorization.
+4. **Blocking evidence:** required source geometry/color is absent, validation fails in a way that
+   changes the design, or an external service cannot continue.
 
-1. Keep Meshy source GLBs immutable.
+Do not pause merely because a phase ended. A user request for an end-to-end result authorizes
+continuing from Phase 1 through validated packaging, subject to the checkpoints above.
+
+## Proportional checks
+
+Always check:
+
+- immutable input and SHA-256;
+- final dimensions and intended scale;
+- final master reopens;
+- required materials/textures or Bambu colors are present;
+- the color-source classification for colored Bambu-bound assets;
+- Bambu importer result for Bambu-bound deliverables;
+- archive integrity and hashes for the final package.
+
+Check only when relevant:
+
+- multiview identity consistency — when multiview is used;
+- geometry/UV digests — when preserving textures or transferring historical paint;
+- complete non-manifold/component analysis — when repairing or claiming print readiness;
+- BVH contact and clearance — for interacting parts;
+- per-color triangle counts — for multicolor 3MF;
+- before/after close-ups — for visible geometry repair.
+
+Avoid repeating an expensive check when the exact validated geometry has not changed. Reuse the
+prior audit and verify the changed layer only.
+
+## Lightweight job record
+
+For long, paid, or multi-session jobs, maintain a concise `JOB-RECORD.json` containing:
+
+- immutable inputs and hashes;
+- Meshy task IDs, settings, and credits when used;
+- accepted source and final Blender master;
+- geometry/topology and color changes;
+- final dimensions and validation results;
+- output paths and whether slicing, AMS mapping, or printer sending occurred.
+
+Do not require a per-step approval ledger for new jobs. `scripts/workflow_state.py` remains only for
+resuming legacy projects that already use the old G0–G9 state format.
+
+## Final response
+
+Lead with the deliverable. Include clickable links to the final package, Blender master, Bambu
+file, validation record, and key render when available. Summarize:
+
+- source route and Meshy credits/task ID, if any;
+- repair and topology impact;
+- dimensions, parts, manifold result, color-source classification, and print-color status;
+- whether Meshy Multi-Color Print or Bambu Texture-to-Color was actually run, its palette size,
+  and whether its raw candidate was cleaned;
+- whether slicing, AMS mapping, and printer sending were performed.
+
+## Invariants
+
+1. Keep source GLBs immutable.
 2. Preserve accepted Blender masters and branch forward.
-3. Keep precision bases and connectors separate from generated characters.
-4. Treat GLB textures and Bambu paint metadata as different systems.
-5. Validate in Blender and Bambu Studio.
-6. Delete or overwrite only when the user explicitly names the target.
-7. Never cross a stage gate without a new user instruction.
+3. Keep precision parts separable and dimensioned.
+4. Treat textures and printable color metadata as different systems.
+5. Validate final Bambu-bound assets in Bambu Studio.
+6. Delete or overwrite only when the user clearly names the target.

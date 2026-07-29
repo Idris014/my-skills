@@ -47,6 +47,18 @@ def file_data_uri(path: Path) -> str:
     return f"data:{mime};base64,{encoded}"
 
 
+def model_data_uri(path: Path) -> str:
+    suffix = path.suffix.lower()
+    mime = {
+        ".glb": "model/gltf-binary",
+        ".fbx": "application/octet-stream",
+    }.get(suffix)
+    if mime is None:
+        raise ValueError(f"Multi-Color Print requires a GLB or FBX file: {path}")
+    encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+    return f"data:{mime};base64,{encoded}"
+
+
 def api_key() -> str:
     value = os.environ.get("MESHY_API_KEY", "").strip()
     if not value:
@@ -119,19 +131,22 @@ def archive_result(task_type: str, result: dict[str, Any], output_dir: Path) -> 
         for file_format, url in model_urls.items():
             if not isinstance(url, str) or file_format not in {"glb", "obj", "fbx", "stl", "3mf"}:
                 continue
-            filename = "source.glb" if file_format == "glb" else f"source.{file_format}"
+            if task_type == "print/multi-color" and file_format == "3mf":
+                filename = "multicolor.3mf"
+            else:
+                filename = "source.glb" if file_format == "glb" else f"source.{file_format}"
             destination = output_dir / filename
             download(url, destination)
             downloaded.append(destination)
 
         thumbnail = result.get("thumbnail_url")
-        if isinstance(thumbnail, str):
+        if isinstance(thumbnail, str) and thumbnail:
             destination = output_dir / "previews" / f"front{suffix_from_url(thumbnail, '.png')}"
             download(thumbnail, destination)
             downloaded.append(destination)
 
         for role, url in result.get("thumbnail_urls", {}).items():
-            if not isinstance(url, str):
+            if not isinstance(url, str) or not url:
                 continue
             destination = output_dir / "previews" / f"{role}{suffix_from_url(url, '.png')}"
             download(url, destination)
@@ -209,6 +224,32 @@ def make_multi_3d(args: argparse.Namespace) -> tuple[str, dict[str, Any], dict[s
     return "multi-image-to-3d", payload, archive
 
 
+def make_multi_color(args: argparse.Namespace) -> tuple[str, dict[str, Any], dict[str, Any]]:
+    payload: dict[str, Any] = {"max_colors": args.max_colors}
+    archive: dict[str, Any] = {
+        "task_type": "print-multi-color",
+        "max_colors": args.max_colors,
+        "expected_success_credits": 10,
+    }
+
+    if args.input_task_id:
+        payload["input_task_id"] = args.input_task_id
+        archive["input_task_id"] = args.input_task_id
+    else:
+        model = Path(args.model_file).expanduser().resolve()
+        if not model.is_file():
+            raise FileNotFoundError(model)
+        payload["model_url"] = model_data_uri(model)
+        archive["model_url"] = {
+            "local_path": str(model),
+            "sha256": sha256(model),
+            "size_bytes": model.stat().st_size,
+            "transport": "data_uri",
+        }
+
+    return "print/multi-color", payload, archive
+
+
 def add_3d_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--texture-resolution", choices=("2k", "4k", "8k"), default="4k")
     parser.add_argument("--no-texture", action="store_true")
@@ -248,15 +289,50 @@ def parse_args() -> argparse.Namespace:
     multi.add_argument("--output-dir", required=True)
     add_3d_options(multi)
 
+    multi_color = subparsers.add_parser(
+        "multi-color",
+        help="Convert a final GLB/FBX or successful Meshy task into a multicolor-print 3MF.",
+    )
+    source = multi_color.add_mutually_exclusive_group(required=True)
+    source.add_argument("--model-file", help="Final local GLB/FBX; uploaded as a data URI.")
+    source.add_argument("--input-task-id", help="Successful compatible Meshy task ID.")
+    multi_color.add_argument("--max-colors", type=int, choices=range(1, 17), default=4)
+    multi_color.add_argument("--output-dir", required=True)
+
+    multi_color_resume = subparsers.add_parser(
+        "multi-color-resume",
+        help="Recover and archive an existing Multi-Color Print task without creating a new task.",
+    )
+    multi_color_resume.add_argument("--task-id", required=True)
+    multi_color_resume.add_argument("--output-dir", required=True)
+
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    if args.command == "multi-color-resume":
+        output_dir = Path(args.output_dir).expanduser().resolve()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        json_write(
+            output_dir / "resume-request.json",
+            {"task_type": "print-multi-color", "task_id": args.task_id},
+        )
+        result = wait_for_task("print/multi-color", args.task_id, args.poll_seconds, args.timeout)
+        json_write(output_dir / "task-result.json", result)
+        if result.get("status") != "SUCCEEDED":
+            print(json.dumps(result, indent=2, ensure_ascii=False), file=sys.stderr)
+            return 2
+        files = archive_result("print/multi-color", result, output_dir)
+        for path in files:
+            print(path)
+        return 0
+
     builders = {
         "multiview": make_multiview,
         "single-3d": make_single_3d,
         "multi-3d": make_multi_3d,
+        "multi-color": make_multi_color,
     }
     task_type, payload, archive = builders[args.command](args)
     output_dir = Path(args.output_dir).expanduser().resolve()
