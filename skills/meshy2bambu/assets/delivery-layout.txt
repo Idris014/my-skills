@@ -1,0 +1,25 @@
+VERSION/
+├── MASTER.blend
+├── README.md
+├── VALIDATION.md
+├── exports/
+│   ├── ASSEMBLY.glb
+│   ├── BASE.glb
+│   ├── BASE.stl
+│   ├── INSERT.glb
+│   └── INSERT.stl
+├── renders/
+│   ├── 01_front_threequarter.png
+│   ├── 02_side_clearance.png
+│   └── 03_connection_or_plan.png
+├── reusable-base/
+└── bambu-studio-delivery/
+    ├── DELIVERY.3mf
+    ├── ASSEMBLY.glb
+    ├── BASE.glb
+    ├── BASE.stl
+    ├── INSERT.glb
+    ├── INSERT.stl
+    ├── README.md
+    ├── VALIDATION.md
+    └── renders/

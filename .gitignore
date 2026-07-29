@@ -1,0 +1,17 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.env
+.env.*
+.venv/
+workflow-state.json
+*.blend1
+*.glb
+*.gltf
+*.obj
+*.fbx
+*.stl
+*.3mf
+*.zip
+meshy-source/
+bambu-studio-delivery/
