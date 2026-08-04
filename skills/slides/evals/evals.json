@@ -1,0 +1,79 @@
+{
+  "skill_name": "slides",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我有一个 Day 1 的课程 PPTX 和一份补充讲义 PDF。请复制现有格式制作 Day 2：内容包括 CNN 历史、视觉任务和生成模型，并同时给我 PPTX、Keynote 和离线课堂 demo。不要覆盖原文件。",
+      "expected_output": "A source-preserving, template-matched Day 2 PPTX; a verified Keynote copy; and offline HTML demos that follow the deck's visual language.",
+      "files": [],
+      "expectations": [
+        "Before creating any intermediate artifact, the workflow initializes one job root and keeps scripts, research, assets, demos, PPTX drafts, renders, QA, and Keynote files inside it.",
+        "The workflow inventories both source files and identifies the PPTX as the editable visual contract.",
+        "Before layout authoring, the workflow creates a detailed slide-by-slide script with narration, visible copy, timing, sources, transitions, and visual briefs, then records a passing script gate.",
+        "After the script gate and before layout, the workflow searches for multiple suitable image candidates, records an asset ledger, and uses image generation only for unresolved gaps.",
+        "The deck is created as a copy and retains editable text, shapes, charts, and simple diagrams.",
+        "The response includes a verified PPTX, a separately converted Keynote file, and offline HTML demos.",
+        "Every slide is rendered and inspected, and overflow/overlap checks are run before delivery.",
+        "Externally sourced claims and assets are recorded in speaker-note Sources blocks."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "修复演示文稿第 10、11、12 页。现在每页都是一张大截图，请把标题、正文、数字和标注拆成可编辑字段，保留真正需要的图片区域，风格必须和前后页一致。",
+      "expected_output": "Three repaired slides reconstructed from native editable elements and appropriately cropped or regenerated raster assets, without unrelated deck-wide changes.",
+      "files": [],
+      "expectations": [
+        "A single job root is created before the change script or repaired-slide artifacts, and no loose intermediate files are left beside the source deck.",
+        "The workflow inspects slides 10–12 together with adjacent slides and their layouts.",
+        "Large screenshots are decomposed rather than reused as full-slide backgrounds.",
+        "Text, labels, metrics, and simple geometry are native editable objects.",
+        "The repair preserves the source deck's master/layout hierarchy and visual system.",
+        "The final QA verifies editability, wrapping, cropping, overlap, and slide-to-slide consistency."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "给一场 45 分钟的生成式视觉工作坊做一套全新的中文 slides，包含 ViT、Swin Transformer、图像生成架构和视频生成，并制作一个不需要安装依赖的交互 HTML demo。教室投影是 1366×768，不能滚动。",
+      "expected_output": "A coherent 45-minute Chinese workshop deck plus a matching offline interactive demo optimized for a 1366×768 projector.",
+      "files": [],
+      "expectations": [
+        "The deck, demo, downloaded or generated assets, render passes, and QA output all remain under one archived job root until verified finals are copied out.",
+        "The deck has a cumulative teaching arc rather than a topic inventory.",
+        "A detailed 45-minute script is completed before any slide-specific layout work, including presenter narration, visible copy, per-slide timing, transitions, demonstrations, and visual search briefs.",
+        "The content uses current primary sources for technical architecture claims.",
+        "An asset ledger shows broad image search coverage and records any image-generation fallback prompts.",
+        "The HTML demo has no remote runtime dependency and fits a 1366×768 desktop viewport without vertical scrolling.",
+        "Narrow-screen behavior remains reachable rather than clipped.",
+        "The slide deck and demo share a consistent visual language while remaining appropriate to their different mediums."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "先为一场 30 分钟的双语产品发布会写出详尽逐页讲稿，再制作高视觉密度但不拥挤的演示文稿。每个需要图片的页面都先尽可能多搜集候选图，确实找不到才生成。最终同时交付 PPTX 和 Keynote。",
+      "expected_output": "A script-first bilingual launch deck whose asset search and generation decisions are traceable, delivered as a verified editable PPTX plus an inspected Keynote copy.",
+      "files": [],
+      "expectations": [
+        "All intermediate state is contained in one job root with a manifest, phase subdirectories, final staging, and a passing workspace audit.",
+        "The deck script is completed and passes coverage, timing, continuity, source, and visual-brief checks before slide authoring begins.",
+        "Every scripted slide separates detailed presenter narration from concise visible copy and records timing and transitions.",
+        "The asset ledger records multiple searched candidates per image-bearing slide when practical, including URLs, usage notes, dimensions, crop suitability, and selection reasons.",
+        "Image generation is used only for search gaps and its prompts record aspect ratio, composition, crop, and text-safe area.",
+        "The verified editable PPTX is completed and inspected before conversion.",
+        "The final handoff contains both the PPTX and a separately reopened and checked Keynote file."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "用项目目录里的模板和资料制作一套 20 页 PPTX。中间会有图片下载、图片生成、PDF/PPTX 提取、构建脚本、好几轮渲染和 QA。不要让任何中间文件散落在项目目录里；所有中间态必须归档在同一个任务文件夹，最后项目目录只出现我要求的 final.pptx。",
+      "expected_output": "A verified final PPTX plus one preserved, self-contained job-root archive holding every intermediate artifact and no unexpected loose project files.",
+      "files": [],
+      "expectations": [
+        "The workflow creates exactly one job root before the first write and records a workspace manifest and project baseline.",
+        "Every script, source record, downloaded or generated image, extracted artifact, draft, render, QA report, log, and temporary file is a descendant of the job root.",
+        "The final PPTX is verified in 90_final-staging before being copied to the requested final path.",
+        "A workspace audit compares the project against the baseline and allows only the exact final PPTX outside the job root.",
+        "The handoff reports the absolute job-root archive path and does not delete it."
+      ]
+    }
+  ]
+}

@@ -3,8 +3,9 @@
 Reusable, production-focused agent skills for ChatGPT and Codex.
 
 This repository collects self-contained workflows for 3D-print production, portrait retouching,
-and AI short-film or music-video production. Each skill combines a focused `SKILL.md` with the
-references, scripts, assets, and UI metadata needed to execute the workflow consistently.
+presentation production, and AI short-film or music-video production. Each skill combines a focused
+`SKILL.md` with the references, scripts, assets, and UI metadata needed to execute the workflow
+consistently.
 
 > [!NOTE]
 > These are standalone skills, not a plugin bundle. A skill provides instructions and supporting
@@ -17,6 +18,7 @@ references, scripts, assets, and UI metadata needed to execute the workflow cons
 | [`meshy2bambu`](skills/meshy2bambu/) | Turning images, descriptions, multiview references, or existing meshes into printable Blender and Bambu Studio deliverables | Meshy generation, non-destructive mesh repair, texture preservation, multicolor preparation, parameterized bases, magnets and locating holes, export validation |
 | [`portrait`](skills/portrait/) | Gated portrait retouching across Lightroom and Photoshop | Global tone, subject/background masks, identity-preserving facial geometry, neutral-gray dodge and burn, controlled clothing and makeup stages, A/B review gates |
 | [`produce-short-film-mv`](skills/produce-short-film-mv/) | Planning, generating, auditing, and packaging narrative shorts, MVs, opening films, trailers, and episodic short-form video | Asset locking, Image2 storyboard prompts, START/END keyframes, continuity review, Seedance 2.0 shot prompts, generation ledgers, edit plans, QA and handoff |
+| [`slides`](skills/slides/) | Creating, extending, repairing, restyling, and converting professional presentation decks | Script-first authorship, editable PPTX reconstruction, reference-deck continuity, asset ledgers, Keynote delivery, companion HTML demos, structural and visual QA |
 
 ## Quick start
 
@@ -33,6 +35,7 @@ Replace `<skill-name>` with one of:
 - `meshy2bambu`
 - `portrait`
 - `produce-short-film-mv`
+- `slides`
 
 Codex normally detects newly installed skills automatically. If the skill does not appear, restart
 Codex and open a new task.
@@ -60,6 +63,8 @@ $meshy2bambu Turn these reference images into a printable multicolor model with 
 $portrait Continue retouching the open portrait non-destructively and pause after each review gate.
 
 $produce-short-film-mv Turn this screenplay into locked visual assets, START/END storyboards, and reviewed video prompts.
+
+$slides Turn this course outline into an editable, source-backed PPTX with a verified Keynote copy.
 ```
 
 ChatGPT and Codex can also select a skill automatically when a request matches the skill's
@@ -98,6 +103,18 @@ The skill can prepare copy-paste prompts and exact filenames when a generation s
 only through a web interface. It does not bundle or grant access to Seedance or any other commercial
 generation service.
 
+### `slides`
+
+- the local `presentations:Presentations` skill and its artifact-tool runtime for PPTX work;
+- Python 3 for workspace, audience-copy, and deliverable validation scripts;
+- optional PDF inspection, image search or generation, browser testing, and frontend-design
+  capabilities when the job requires them;
+- macOS Keynote and `osascript` when native `.key` delivery is requested.
+
+The workflow keeps all generated intermediate state in one auditable build archive, treats the deck
+script as the content source of truth, preserves editability, and verifies PPTX output before any
+Keynote conversion.
+
 ## Repository layout
 
 ```text
@@ -114,9 +131,14 @@ my-skills/
 │   │   ├── agents/
 │   │   ├── evals/
 │   │   └── references/
-│   └── produce-short-film-mv/
+│   ├── produce-short-film-mv/
+│   │   ├── SKILL.md
+│   │   ├── agents/
+│   │   ├── references/
+│   │   └── scripts/
+│   └── slides/
 │       ├── SKILL.md
-│       ├── agents/
+│       ├── evals/
 │       ├── references/
 │       └── scripts/
 ├── CONTRIBUTING.md
