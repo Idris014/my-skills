@@ -1,0 +1,4 @@
+interface:
+  display_name: "短片与 MV 生成"
+  short_description: "从剧本或歌曲完成资产锁定、统一分镜、连续性审核与视频提示词"
+  default_prompt: "使用 $produce-short-film-mv 将我的剧本或歌曲规划为视觉资产、分镜图和 Seedance 2.0 提示词，并执行连续性审核。"

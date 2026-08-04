@@ -8,6 +8,7 @@ A public collection of reusable Codex skills.
 | --- | --- |
 | [`meshy2bambu`](skills/meshy2bambu/) | Converts images, descriptions, multiview references, or existing AI-generated models into repaired Blender assets, parameterized printable/magnetic bases, and validated Bambu Studio deliveries. |
 | [`portrait`](skills/portrait/) | Guides a gated, non-destructive Lightroom and Photoshop portrait-retouch workflow, with facial geometry finalized before neutral-gray dodge and burn. |
+| [`produce-short-film-mv`](skills/produce-short-film-mv/) | Controls end-to-end AI production for narrative shorts, music videos, opening films, trailers, and episodic short-form video, from locked visual assets through storyboard, continuity, video prompts, QA, and packaged handoff. |
 
 ## Repository layout
 
@@ -20,11 +21,16 @@ my-skills/
 │   │   ├── evals/
 │   │   ├── references/
 │   │   └── scripts/
-│   └── portrait/
+│   ├── portrait/
 │       ├── SKILL.md
 │       ├── agents/
 │       ├── evals/
 │       └── references/
+│   └── produce-short-film-mv/
+│       ├── SKILL.md
+│       ├── agents/
+│       ├── references/
+│       └── scripts/
 ├── CONTRIBUTING.md
 └── SECURITY.md
 ```
@@ -39,6 +45,7 @@ Ask Codex to install the skill from:
 ```text
 https://github.com/Idris014/my-skills/tree/main/skills/meshy2bambu
 https://github.com/Idris014/my-skills/tree/main/skills/portrait
+https://github.com/Idris014/my-skills/tree/main/skills/produce-short-film-mv
 ```
 
 Or clone and copy it manually:
