@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portrait Retouch"
+  short_description: "先定五官几何、再做中性灰的分阶段 Lightroom 与 Photoshop 人像精修"
+  default_prompt: "Use $portrait to retouch the open portrait non-destructively, finalize facial geometry before geometry-dependent neutral-gray retouching, require a visible A/B improvement at each prescribed inspection scale, and pause after every gated stage."

@@ -7,18 +7,24 @@ A public collection of reusable Codex skills.
 | Skill | Description |
 | --- | --- |
 | [`meshy2bambu`](skills/meshy2bambu/) | Converts images, descriptions, multiview references, or existing AI-generated models into repaired Blender assets, parameterized printable/magnetic bases, and validated Bambu Studio deliveries. |
+| [`portrait`](skills/portrait/) | Guides a gated, non-destructive Lightroom and Photoshop portrait-retouch workflow, with facial geometry finalized before neutral-gray dodge and burn. |
 
 ## Repository layout
 
 ```text
 my-skills/
 ├── skills/
-│   └── meshy2bambu/
+│   ├── meshy2bambu/
+│   │   ├── SKILL.md
+│   │   ├── assets/
+│   │   ├── evals/
+│   │   ├── references/
+│   │   └── scripts/
+│   └── portrait/
 │       ├── SKILL.md
-│       ├── assets/
+│       ├── agents/
 │       ├── evals/
-│       ├── references/
-│       └── scripts/
+│       └── references/
 ├── CONTRIBUTING.md
 └── SECURITY.md
 ```
@@ -32,13 +38,14 @@ Ask Codex to install the skill from:
 
 ```text
 https://github.com/Idris014/my-skills/tree/main/skills/meshy2bambu
+https://github.com/Idris014/my-skills/tree/main/skills/portrait
 ```
 
 Or clone and copy it manually:
 
 ```bash
 git clone https://github.com/Idris014/my-skills.git
-cp -R my-skills/skills/meshy2bambu ~/.codex/skills/
+cp -R my-skills/skills/<skill-name> ~/.codex/skills/
 ```
 
 Restart or begin a new Codex task after installation so the skill catalog refreshes.
